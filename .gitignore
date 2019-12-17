@@ -1,5 +1,6 @@
 # data files
 MNIST_DATA
+MNIST_data
 
 # attack files
 *.npy
@@ -9,3 +10,8 @@ models
 
 # compiled python files
 *.pyc
+
+#MISC
+*.png
+.idea
+.DS_Store

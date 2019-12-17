@@ -23,6 +23,11 @@ with open('config.json') as config_file:
 # Setting up training parameters
 tf.set_random_seed(config['random_seed'])
 
+#Added step to make cuDNN initialize correctly
+#Without this the program does not run
+#gpu=tf.config.experimental.list_physical_devices('GPU')[0]
+#tf.config.experimental.set_memory_growth(gpu, True)
+
 max_num_training_steps = config['max_num_training_steps']
 num_output_steps = config['num_output_steps']
 num_summary_steps = config['num_summary_steps']
@@ -76,10 +81,12 @@ with tf.Session() as sess:
 
   # Main training loop
   for ii in range(max_num_training_steps):
+    # Normal training
     x_batch, y_batch = mnist.train.next_batch(batch_size)
 
     # Compute Adversarial Perturbations
     start = timer()
+    #This is now the perturbed images
     x_batch_adv = attack.perturb(x_batch, y_batch, sess)
     end = timer()
     training_time += end - start
@@ -113,6 +120,7 @@ with tf.Session() as sess:
                  global_step=global_step)
 
     # Actual training step
+    #Uses the generated adversarial examples to train
     start = timer()
     sess.run(train_step, feed_dict=adv_dict)
     end = timer()
