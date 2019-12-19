@@ -21,5 +21,8 @@
   "a": 0.01,
   "random_start": true,
   "loss_func": "xent",
-  "store_adv_path": "attack.npy"
+  "store_adv_path": "attack.npy",
+
+  "suffix1": "a_very_robust_model",
+  "suffix2": "a_very_robust_model"
 }

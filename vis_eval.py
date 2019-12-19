@@ -35,24 +35,11 @@ def getkey(ckptname):
     ckptname = re.sub(r'\.data*','',ckptname)
     return int(ckptname)
 
-def getexamples(ckptname,config):
-    tf.reset_default_graph()
-    model = Model()
-    saver = tf.train.Saver()
-    attack = LinfPGDAttack(model,
-                           config['epsilon'],
-                           config['k'],
-                           config['a'],
-                           config['random_start'],
-                           config['loss_func'])
-    with tf.Session() as sess:
-        saver.restore(sess,ckptname)
-
 #Take input options
 default_model = 'a_very_robust_model'
 default_num = 20
-model_dir = '/Users/zao/Additional_programs/mnist_challenge/models/'
-img_dir = '/Users/zhao/Additional_programs/mnist_challenge/comparison_imgs/'
+model_dir = '/Users/zao/Additional_applications/mnist_challenge/models/'
+img_dir = '/Users/zao/Additional_applications/mnist_challenge/comparison_imgs/'
 
 suffix1 = raw_input('Enter the first model directory, default config')
 suffix2 = raw_input('Enter the second model directory, default config')
@@ -110,3 +97,22 @@ attack = LinfPGDAttack(model,
                        config['a'],
                        config['random_start'],
                        config['loss_func'])
+
+#Generate the adversarial examples
+#Should add functionality to display the new y class
+with tf.Session() as sess:
+    saver = tf.train.Saver()
+    saver.restore(sess,checkpoint1)
+    x_adv_1 = attack.perturb(x_orig,y_orig,sess)
+    saver.restore(sess,checkpoint2)
+    x_adv_2 = attack.perturb(x_orig,y_orig,sess)
+
+#Declare the matplotib plots to use
+fig,(orig_ax,adv_1_ax,adv_2_ax) = plt.subplots(1,3)
+maxlength=len(str(num_examples))
+
+for i in range(num_examples):
+    orig_ax.imshow(np.stack([np.reshape(x_orig[i,:],(28,28))]*3,-1))
+    adv_1_ax.imshow(np.stack([np.reshape(x_adv_1[i,:],(28,28))]*3,-1))
+    adv_2_ax.imshow(np.stack([np.reshape(x_adv_2[i,:],(28,28))]*3,-1))
+    plt.savefig(img_dir+('0'*(maxlength-len(str(i))))+str(i)+'.png')
