@@ -110,6 +110,11 @@ with tf.Session() as sess:
 #Declare the matplotib plots to use
 fig,(orig_ax,adv_1_ax,adv_2_ax) = plt.subplots(1,3)
 maxlength=len(str(num_examples))
+fig.suptitle("Epsilon: "+str(epsilon))
+orig_ax.set_title("Original example")
+adv_1_ax.set_title(suffix1)
+adv_2_ax.set_title(suffix2)
+print(orig_ax.title)
 
 for i in range(num_examples):
     orig_ax.imshow(np.stack([np.reshape(x_orig[i,:],(28,28))]*3,-1))
