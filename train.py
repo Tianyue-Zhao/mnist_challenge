@@ -32,6 +32,10 @@ max_num_training_steps = config['max_num_training_steps']
 num_output_steps = config['num_output_steps']
 num_summary_steps = config['num_summary_steps']
 num_checkpoint_steps = config['num_checkpoint_steps']
+if(('train_adv' in config) and (config['train_adv']==0)):
+    train_adv = False
+else:
+    train_adv = True
 
 batch_size = config['training_batch_size']
 
@@ -45,12 +49,13 @@ train_step = tf.train.AdamOptimizer(1e-4).minimize(model.xent,
                                                    global_step=global_step)
 
 # Set up adversary
-attack = LinfPGDAttack(model, 
-                       config['epsilon'],
-                       config['k'],
-                       config['a'],
-                       config['random_start'],
-                       config['loss_func'])
+if(train_adv):
+    attack = LinfPGDAttack(model,
+                           config['epsilon'],
+                           config['k'],
+                           config['a'],
+                           config['random_start'],
+                           config['loss_func'])
 
 # Setting up the Tensorboard and checkpoint outputs
 model_dir = config['model_dir']
@@ -87,30 +92,37 @@ with tf.Session() as sess:
     # Compute Adversarial Perturbations
     start = timer()
     #This is now the perturbed images
-    x_batch_adv = attack.perturb(x_batch, y_batch, sess)
+    if(train_adv):
+        x_batch_adv = attack.perturb(x_batch, y_batch, sess)
+
+        adv_dict = {model.x_input: x_batch_adv,
+                    model.y_input: y_batch}
+
     end = timer()
     training_time += end - start
 
     nat_dict = {model.x_input: x_batch,
                 model.y_input: y_batch}
 
-    adv_dict = {model.x_input: x_batch_adv,
-                model.y_input: y_batch}
-
     # Output to stdout
     if ii % num_output_steps == 0:
       nat_acc = sess.run(model.accuracy, feed_dict=nat_dict)
-      adv_acc = sess.run(model.accuracy, feed_dict=adv_dict)
+      if(train_adv):
+          adv_acc = sess.run(model.accuracy, feed_dict=adv_dict)
       print('Step {}:    ({})'.format(ii, datetime.now()))
       print('    training nat accuracy {:.4}%'.format(nat_acc * 100))
-      print('    training adv accuracy {:.4}%'.format(adv_acc * 100))
+      if(train_adv):
+          print('    training adv accuracy {:.4}%'.format(adv_acc * 100))
       if ii != 0:
         print('    {} examples per second'.format(
             num_output_steps * batch_size / training_time))
         training_time = 0.0
     # Tensorboard summaries
     if ii % num_summary_steps == 0:
-      summary = sess.run(merged_summaries, feed_dict=adv_dict)
+      if(train_adv):
+        summary = sess.run(merged_summaries, feed_dict=adv_dict)
+      else:
+        summary = sess.run(merged_summaries, feed_dict=nat_dict)
       summary_writer.add_summary(summary, global_step.eval(sess))
 
     # Write a checkpoint
@@ -122,6 +134,9 @@ with tf.Session() as sess:
     # Actual training step
     #Uses the generated adversarial examples to train
     start = timer()
-    sess.run(train_step, feed_dict=adv_dict)
+    if(train_adv):
+        sess.run(train_step, feed_dict=adv_dict)
+    else:
+        sess.run(train_step, feed_dict=nat_dict)
     end = timer()
     training_time += end - start

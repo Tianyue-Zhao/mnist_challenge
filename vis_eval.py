@@ -57,7 +57,7 @@ if(img_suffix!=''):
 if(suffix1==''):
     suffix1=config['suffix1']
 if(suffix2==''):
-    suffix2=config['suffix1']
+    suffix2=config['suffix2']
 checkpoint1 = tf.train.latest_checkpoint(model_dir+suffix1)
 checkpoint2 = tf.train.latest_checkpoint(model_dir+suffix2)
 if((checkpoint1==None) or (checkpoint2==None)):

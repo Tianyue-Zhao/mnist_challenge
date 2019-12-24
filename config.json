@@ -1,14 +1,15 @@
 {
   "_comment": "===== MODEL CONFIGURATION =====",
-  "model_dir": "models/a_very_robust_model_101",
+  "model_dir": "models/no_adv_training",
 
   "_comment": "===== TRAINING CONFIGURATION =====",
   "random_seed": 4557077,
-  "max_num_training_steps": 101,
+  "max_num_training_steps": 1000,
   "num_output_steps": 100,
   "num_summary_steps": 100,
   "num_checkpoint_steps": 300,
   "training_batch_size": 50,
+  "train_adv": 0,
 
   "_comment": "===== EVAL CONFIGURATION =====",
   "num_eval_examples": 10000,
@@ -23,6 +24,6 @@
   "loss_func": "xent",
   "store_adv_path": "attack.npy",
 
-  "suffix1": "a_very_robust_model",
+  "suffix1": "no_adv_training",
   "suffix2": "a_very_robust_model"
 }
