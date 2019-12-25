@@ -104,8 +104,20 @@ with tf.Session() as sess:
     saver = tf.train.Saver()
     saver.restore(sess,checkpoint1)
     x_adv_1 = attack.perturb(x_orig,y_orig,sess)
+    res_pre_1 = sess.run(model.pre_softmax,
+                         feed_dict={model.x_input: x_orig})
+    arg_pre_1 = np.argmax(res_pre_1, axis=1)
+    res_post_1 = sess.run(model.pre_softmax,
+                          feed_dict={model.x_input: x_adv_1})
+    arg_post_1 = np.argmax(res_post_1, axis=1)
     saver.restore(sess,checkpoint2)
     x_adv_2 = attack.perturb(x_orig,y_orig,sess)
+    res_pre_2 = sess.run(model.pre_softmax,
+                         feed_dict={model.x_input: x_orig})
+    arg_pre_2 = np.argmax(res_pre_2, axis=1)
+    res_post_2 = sess.run(model.pre_softmax,
+                          feed_dict={model.x_input: x_adv_2})
+    arg_post_2 = np.argmax(res_post_2, axis=1)
 
 #Declare the matplotib plots to use
 fig,(orig_ax,adv_1_ax,adv_2_ax) = plt.subplots(1,3)
@@ -117,6 +129,8 @@ adv_2_ax.set_title(suffix2)
 print(orig_ax.title)
 
 for i in range(num_examples):
+    adv_1_ax.set_xlabel(str(arg_post_1[i]))
+    adv_2_ax.set_xlabel(str(arg_post_2[i]))
     orig_ax.imshow(np.stack([np.reshape(x_orig[i,:],(28,28))]*3,-1))
     adv_1_ax.imshow(np.stack([np.reshape(x_adv_1[i,:],(28,28))]*3,-1))
     adv_2_ax.imshow(np.stack([np.reshape(x_adv_2[i,:],(28,28))]*3,-1))
