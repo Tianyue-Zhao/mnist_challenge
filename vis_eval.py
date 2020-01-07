@@ -10,6 +10,7 @@ import tensorflow as tf
 from model import Model
 import json
 from pgd_attack import LinfPGDAttack
+from pgd_l2 import L2PGDAttack
 from random import random
 
 #Take input: checkpoint 1, default 0
@@ -38,8 +39,8 @@ def getkey(ckptname):
 #Take input options
 default_model = 'a_very_robust_model'
 default_num = 20
-model_dir = '/Users/zao/Additional_applications/mnist_challenge/models/'
-img_dir = '/Users/zao/Additional_applications/mnist_challenge/comparison_imgs/'
+model_dir = '/home/zhao/Additional_programs/mnist_challenge/models/'
+img_dir = '/home/zhao/Additional_programs/mnist_challenge/comparison_imgs/'
 
 suffix1 = raw_input('Enter the first model directory, default config')
 suffix2 = raw_input('Enter the second model directory, default config')
@@ -49,6 +50,8 @@ num_examples = raw_input('Enter the number of examples to generate, default '
 epsilon = raw_input('Enter the epsilon to use, default config value')
 
 config = json.load(open('config.json'))
+gpu=tf.config.experimental.list_physical_devices('GPU')[0]
+tf.config.experimental.set_memory_growth(gpu, True)
 
 #Handle the input values
 if(img_suffix!=''):
@@ -91,7 +94,7 @@ y_orig = y[used_indexes]
 
 #Declare the model and attacks to use
 model = Model()
-attack = LinfPGDAttack(model,
+attack = L2PGDAttack(model,
                        epsilon,
                        config['k'],
                        config['a'],

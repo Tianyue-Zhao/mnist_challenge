@@ -25,8 +25,8 @@ tf.set_random_seed(config['random_seed'])
 
 #Added step to make cuDNN initialize correctly
 #Without this the program does not run
-#gpu=tf.config.experimental.list_physical_devices('GPU')[0]
-#tf.config.experimental.set_memory_growth(gpu, True)
+gpu=tf.config.experimental.list_physical_devices('GPU')[0]
+tf.config.experimental.set_memory_growth(gpu, True)
 
 max_num_training_steps = config['max_num_training_steps']
 num_output_steps = config['num_output_steps']
