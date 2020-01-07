@@ -70,8 +70,9 @@ class L2PGDAttack:
             L2_grad = np.sqrt(np.sum(np.square(x-x_nat),axis=1))*2
             tmp=2*np.clip((np.sqrt(L_2)-self.sqrt_epsilon),0,None)/L2_grad
             tmp=np.array([tmp])
-            print(tmp.shape)
-            x -= tmp.transpose()*(x-x_nat)
+            multiplier = 2*np.clip(np.sqrt(L_2)-self.sqrt_epsilon,0,None)/L2_grad
+            multiplier = np.array([multiplier]).transpose()
+            x -= multiplier*(x-x_nat)
             print(np.sum(np.square(x-x_nat),axis=1))
             x = np.clip(x, 0, 1) # ensure valid pixel range
 
