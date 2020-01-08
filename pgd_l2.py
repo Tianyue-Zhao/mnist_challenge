@@ -19,6 +19,7 @@ class L2PGDAttack:
 
         if loss_func == 'xent':
             loss = model.xent
+            self.pre_softmax = model.pre_softmax
         elif loss_func == 'cw':
             #model.y_input is the correct label
             #label_mask is a 10*batch matrix
@@ -41,6 +42,7 @@ class L2PGDAttack:
             loss = model.xent
 
         self.grad = tf.gradients(loss, model.x_input)[0]
+        self.softmax_grad = tf.gradients(self.pre_softmax, model.x_input)[0]
 
     def perturb(self, x_nat, y, sess):
         """Given a set of examples (x_nat, y), returns a set of adversarial
@@ -50,8 +52,21 @@ class L2PGDAttack:
             x = np.clip(x, 0, 1) # ensure valid pixel range
         else:
             x = np.copy(x_nat)
+        grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
+                                              self.model.y_input: y})
+        softmax_grad = sess.run(self.softmax_grad,
+                                feed_dict={self.model.x_input: x,
+                                           self.model.y_input: y})
+        softmax = sess.run(self.pre_softmax,
+                                feed_dict={self.model.x_input: x,
+                                           self.model.y_input: y})
+        print('Loss gradients')
+        print(grad)
+        print('Class gradients')
+        print(softmax_grad)
+        print(softmax_grad.shape)
+        print(softmax.shape)
 
-        print('Hey')
         for i in range(self.k):
             grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
                                                   self.model.y_input: y})
@@ -66,14 +81,10 @@ class L2PGDAttack:
             #print(np.sum(np.square(x-x_nat)))
 
             L_2 = np.sum(np.square(x-x_nat),axis=1)
-            print(L_2.shape)
             L2_grad = np.sqrt(np.sum(np.square(x-x_nat),axis=1))*2
-            tmp=2*np.clip((np.sqrt(L_2)-self.sqrt_epsilon),0,None)/L2_grad
-            tmp=np.array([tmp])
             multiplier = 2*np.clip(np.sqrt(L_2)-self.sqrt_epsilon,0,None)/L2_grad
             multiplier = np.array([multiplier]).transpose()
             x -= multiplier*(x-x_nat)
-            print(np.sum(np.square(x-x_nat),axis=1))
             x = np.clip(x, 0, 1) # ensure valid pixel range
 
         return x

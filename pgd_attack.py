@@ -55,7 +55,6 @@ class LinfPGDAttack:
       x = np.clip(x, 0, 1) # ensure valid pixel range
     else:
       x = np.copy(x_nat)
-
     for i in range(self.k):
       grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
                                             self.model.y_input: y})

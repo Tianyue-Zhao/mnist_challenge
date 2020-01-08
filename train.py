@@ -15,7 +15,8 @@ import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
 
 from model import Model
-from pgd_attack import LinfPGDAttack
+#from pgd_attack import LinfPGDAttack
+from pgd_l2 import L2PGDAttack
 
 with open('config.json') as config_file:
     config = json.load(config_file)
@@ -50,7 +51,7 @@ train_step = tf.train.AdamOptimizer(1e-4).minimize(model.xent,
 
 # Set up adversary
 if(train_adv):
-    attack = LinfPGDAttack(model,
+    attack = L2PGDAttack(model,
                            config['epsilon'],
                            config['k'],
                            config['a'],
