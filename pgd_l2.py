@@ -19,7 +19,7 @@ class L2PGDAttack:
 
         if loss_func == 'xent':
             loss = model.xent
-            self.pre_softmax = model.pre_softmax
+            self.pre_softmax = model.pre_softmax[:,0]
         elif loss_func == 'cw':
             #model.y_input is the correct label
             #label_mask is a 10*batch matrix
