@@ -6,7 +6,7 @@ import tensorflow as tf
 import numpy as np
 
 class L2PGDAttack:
-    def __init__(self, model, epsilon, k, a, random_start, loss_func):
+    def __init__(self, model, epsilon, k, a, random_start, loss_func, target_class=None):
         """Attack parameter initialization. The attack performs k steps of
            size a, while always staying within epsilon from the initial
            point."""
@@ -42,6 +42,8 @@ class L2PGDAttack:
             loss = model.xent
 
         self.grad = tf.gradients(loss, model.x_input)[0]
+        if(target_class!=None):
+            self.grad = tf.gradients(model.pre_softmax[:,target_class], model.x_input)[0]
         self.softmax_grad = tf.gradients(self.pre_softmax, model.x_input)[0]
 
     def perturb(self, x_nat, y, sess):
@@ -52,20 +54,20 @@ class L2PGDAttack:
             x = np.clip(x, 0, 1) # ensure valid pixel range
         else:
             x = np.copy(x_nat)
-        grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
-                                              self.model.y_input: y})
-        softmax_grad = sess.run(self.softmax_grad,
-                                feed_dict={self.model.x_input: x,
-                                           self.model.y_input: y})
-        softmax = sess.run(self.pre_softmax,
-                                feed_dict={self.model.x_input: x,
-                                           self.model.y_input: y})
-        print('Loss gradients')
-        print(grad)
-        print('Class gradients')
-        print(softmax_grad)
-        print(softmax_grad.shape)
-        print(softmax.shape)
+        #grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
+        #                                      self.model.y_input: y})
+        #softmax_grad = sess.run(self.softmax_grad,
+        #                        feed_dict={self.model.x_input: x,
+        #                                   self.model.y_input: y})
+        #softmax = sess.run(self.pre_softmax,
+        #                        feed_dict={self.model.x_input: x,
+        #                                   self.model.y_input: y})
+        #print('Loss gradients')
+        #print(grad)
+        #print('Class gradients')
+        #print(softmax_grad)
+        #print(softmax_grad.shape)
+        #print(softmax.shape)
 
         for i in range(self.k):
             grad = sess.run(self.grad, feed_dict={self.model.x_input: x,

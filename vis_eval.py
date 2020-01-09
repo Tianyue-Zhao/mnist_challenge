@@ -96,10 +96,12 @@ y_orig = y[used_indexes]
 model = Model()
 attack = L2PGDAttack(model,
                        epsilon,
-                       config['k'],
+                       #config['k'],
+                       400,
                        config['a'],
                        config['random_start'],
-                       config['loss_func'])
+                       config['loss_func'],
+                       target_class=2)
 
 #Generate the adversarial examples
 #Should add functionality to display the new y class
