@@ -19,7 +19,6 @@ class L2PGDAttack:
 
         if loss_func == 'xent':
             loss = model.xent
-            self.pre_softmax = model.pre_softmax[:,0]
         elif loss_func == 'cw':
             #model.y_input is the correct label
             #label_mask is a 10*batch matrix
@@ -44,9 +43,9 @@ class L2PGDAttack:
         self.grad = tf.gradients(loss, model.x_input)[0]
         if(target_class!=None):
             self.grad = tf.gradients(model.pre_softmax[:,target_class], model.x_input)[0]
-        self.softmax_grad = tf.gradients(self.pre_softmax, model.x_input)[0]
+        self.pre_softmax = model.pre_softmax
 
-    def perturb(self, x_nat, y, sess):
+    def perturb(self, x_nat, y, sess, return_history=False):
         """Given a set of examples (x_nat, y), returns a set of adversarial
            examples within epsilon of x_nat in l_infinity norm."""
         if self.rand:
@@ -68,6 +67,12 @@ class L2PGDAttack:
         #print(softmax_grad)
         #print(softmax_grad.shape)
         #print(softmax.shape)
+        if(return_history):
+            x_history = np.stack([x_nat]*(self.k+1),axis=-1)
+            softmax_history = np.zeros((x_nat.shape[0],10,self.k+1))
+            softmax_history[:, :, 0] = sess.run(self.pre_softmax,
+                                                feed_dict={self.model.x_input: x,
+                                                           self.model.y_input: y})
 
         for i in range(self.k):
             grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
@@ -88,5 +93,14 @@ class L2PGDAttack:
             multiplier = np.array([multiplier]).transpose()
             x -= multiplier*(x-x_nat)
             x = np.clip(x, 0, 1) # ensure valid pixel range
+            if(return_history):
+                x_history[:,:,i+1] = x
+                softmax_history[:,:,i+1] = sess.run(self.pre_softmax,
+                                                  feed_dict={self.model.x_input: x,
+                                                             self.model.y_input: y})
 
-        return x
+        print(softmax_history[:,:,0])
+        if(return_history):
+            return x_history, softmax_history
+        else:
+            return x
