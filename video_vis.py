@@ -13,6 +13,7 @@ from pgd_attack import LinfPGDAttack
 from pgd_l2 import L2PGDAttack
 from random import random
 import cv2
+import multiprocessing as mp
 
 mnist = input_data.read_data_sets('MNIST_data', one_hot=False)
 x=mnist.test.images
@@ -88,7 +89,7 @@ else:
 checkpoint = tf.train.latest_checkpoint(model_dir+model_suffix)
 results = np.zeros((784,num_examples))
 
-#Declare the video output
+#Initialize the matplotlib figure and subplot
 fig, (ax) = plt.subplots(1,1)
 #Generate the adversarial examples
 with tf.Session() as sess:
@@ -98,15 +99,23 @@ with tf.Session() as sess:
 
 maxlength = len(str(num_examples))
 (w,h) = fig.canvas.get_width_height()
-for i in range(num_examples):
-    video_out = cv2.VideoWriter(img_dir+('0'*(maxlength-len(str(i))))+str(i)+'.avi',
-                                cv2.VideoWriter_fourcc('M','J','P','G'),10,
-                                (w,h))
-    for k in range(steps+1):
-        ax.imshow(np.stack([np.reshape(x_history[i,:,k],(28,28))]*3,-1))
-        ax.set_xlabel(str(y_orig[i])+': '+str(softmax_history[i,y_orig[i],k])+'    '
-                      +str(target_class)+': '+str(softmax_history[i,target_class,k]))
+
+#Function for use with parallel-processing
+def output_video(cur_index):
+    video_out = cv2.VideoWriter(img_dir + ('0' * (maxlength - len(str(cur_index)))) + str(cur_index) + '.avi',
+                                cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10,
+                                (w, h))
+    for k in range(steps + 1):
+        ax.imshow(np.stack([np.reshape(x_history[cur_index, :, k], (28, 28))] * 3, -1))
+        ax.set_xlabel(str(y_orig[cur_index]) + ': ' + str(softmax_history[cur_index, y_orig[cur_index], k]) + '    '
+                      + str(target_class) + ': ' + str(softmax_history[cur_index, target_class, k]))
         fig.canvas.draw()
         frame = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
-        frame = np.reshape(frame,(h,w,3))
+        frame = np.reshape(frame, (h, w, 3))
         video_out.write(frame)
+
+#Utilize multi-processing for the video output
+print("Number of processors: ", mp.cpu_count())
+pool = mp.Pool(mp.cpu_count())
+pool.map(output_video, range(num_examples))
+pool.close()
