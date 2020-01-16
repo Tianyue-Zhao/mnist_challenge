@@ -89,19 +89,18 @@ else:
 checkpoint = tf.train.latest_checkpoint(model_dir+model_suffix)
 results = np.zeros((784,num_examples))
 
-#Initialize the matplotlib figure and subplot
-fig, (ax) = plt.subplots(1,1)
 #Generate the adversarial examples
 with tf.Session() as sess:
     saver = tf.train.Saver()
     saver.restore(sess,checkpoint)
-    x_history, softmax_history = attack.perturb(x_orig,y_orig,sess,return_history=True)
+    x_history, softmax_history, L2_history = attack.perturb(x_orig,y_orig,sess,return_history=True)
 
-maxlength = len(str(num_examples))
-(w,h) = fig.canvas.get_width_height()
-
+maxlength = len(str(num_examples-1))
 #Function for use with parallel-processing
 def output_video(cur_index):
+    # Initialize the matplotlib figure and subplot
+    fig, (ax) = plt.subplots(1, 1)
+    (w, h) = fig.canvas.get_width_height()
     video_out = cv2.VideoWriter(img_dir + ('0' * (maxlength - len(str(cur_index)))) + str(cur_index) + '.avi',
                                 cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10,
                                 (w, h))
@@ -109,6 +108,8 @@ def output_video(cur_index):
         ax.imshow(np.stack([np.reshape(x_history[cur_index, :, k], (28, 28))] * 3, -1))
         ax.set_xlabel(str(y_orig[cur_index]) + ': ' + str(softmax_history[cur_index, y_orig[cur_index], k]) + '    '
                       + str(target_class) + ': ' + str(softmax_history[cur_index, target_class, k]))
+        ax.set_title("Step: "+str(k))
+        fig.suptitle("L2: "+str(L2_history[cur_index, k]))
         fig.canvas.draw()
         frame = np.fromstring(fig.canvas.tostring_rgb(), dtype=np.uint8, sep='')
         frame = np.reshape(frame, (h, w, 3))

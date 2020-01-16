@@ -73,6 +73,7 @@ class L2PGDAttack:
             softmax_history[:, :, 0] = sess.run(self.pre_softmax,
                                                 feed_dict={self.model.x_input: x,
                                                            self.model.y_input: y})
+            L2_history = np.zeros((x_nat.shape[0],self.k+1))
 
         for i in range(self.k):
             grad = sess.run(self.grad, feed_dict={self.model.x_input: x,
@@ -98,9 +99,10 @@ class L2PGDAttack:
                 softmax_history[:,:,i+1] = sess.run(self.pre_softmax,
                                                   feed_dict={self.model.x_input: x,
                                                              self.model.y_input: y})
+                L2_history[:,i+1] = np.sum(np.square(x - x_nat), axis=1)
 
         print(softmax_history[:,:,0])
         if(return_history):
-            return x_history, softmax_history
+            return x_history, softmax_history, L2_history
         else:
             return x
